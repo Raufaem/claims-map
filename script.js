@@ -23,7 +23,7 @@ const markerClusterGroup = L.markerClusterGroup({
 map.addLayer(markerClusterGroup);
 
 let allData = [];
-let currentYear = '2026'; // NEW: track current year
+let currentYear = '2026'; // track current year
 
 // Load Oshawa boundary GeoJSON and add to map
 fetch('oshawa_boundary.geojson')
@@ -45,14 +45,31 @@ fetch('oshawa_boundary.geojson')
   });
 
 /* ===========================
-   NEW: Load data by year
+   NEW: Data last updated text
+   =========================== */
+function updateDataUpdated() {
+  const now = new Date();
+  const formatted = now.toLocaleDateString(undefined, {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  });
+
+  const div = document.getElementById('data-updated');
+  if (div) {
+    div.textContent = `Data last updated: ${formatted}`;
+  }
+}
+
+/* ===========================
+   Load data by year
    =========================== */
 function loadYearData(year) {
   currentYear = year;
 
-  const csvPath = `claims_${year}.csv`; // <-- if stored in /data/, use: `data/claims_${year}.csv`
+  const csvPath = `claims_${year}.csv`; // if stored in /data/, use: `data/claims_${year}.csv`
 
-  // Optional: clear old markers + count immediately so user sees it changed
+  // Clear old markers + count immediately so user sees it changed
   markerClusterGroup.clearLayers();
   updateClaimCount(0);
 
@@ -62,7 +79,12 @@ function loadYearData(year) {
     skipEmptyLines: true,
     complete: (results) => {
       allData = results.data.filter(row => row.latitude && row.longitude);
-      applyFilters(); // IMPORTANT: reuse your existing filter logic
+
+      // ✅ Update the “last updated” text whenever the CSV loads successfully
+      updateDataUpdated();
+
+      // Reuse your existing filter logic
+      applyFilters();
     },
     error: (err) => {
       console.error(`Failed to load ${csvPath}`, err);
@@ -160,9 +182,9 @@ function applyFilters() {
 // Filter button event
 document.getElementById('filter-button').addEventListener('click', applyFilters);
 
-// NEW: year dropdown change
+// Year dropdown change
 document.getElementById('year-select').addEventListener('change', (e) => {
-  // Optional: wipe filters when switching years to avoid "empty" confusion
+  // Wipe filters when switching years to avoid "empty" confusion
   document.getElementById('start-date').value = '';
   document.getElementById('end-date').value = '';
   document.getElementById('type-select').value = '';
@@ -195,7 +217,7 @@ legend.onAdd = function () {
 
 legend.addTo(map);
 
-// NEW: initial load (default to whatever your dropdown is set to)
+// Initial load (default to whatever your dropdown is set to)
 document.addEventListener('DOMContentLoaded', () => {
   const yearSelect = document.getElementById('year-select');
   loadYearData(yearSelect ? yearSelect.value : '2026');
