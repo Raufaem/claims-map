@@ -88,9 +88,12 @@ function loadYearData(year) {
     download: true,
     skipEmptyLines: true,
     complete: (results) => {
+
+      console.log('DEBUG data_updated first row:', results.data[0]?.data_updated);
+
       allData = results.data.filter(r => r.latitude && r.longitude);
 
-      updateDataUpdatedFromCsv(results);   // ✅ read from CSV
+      updateDataUpdatedFromCsv(results);
 
       applyFilters();
     },
@@ -98,6 +101,7 @@ function loadYearData(year) {
       console.error('CSV failed to load:', csvPath, err);
     }
   });
+
 }
 
 /* ===========================
