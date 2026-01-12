@@ -15,17 +15,17 @@ const typeColors = {
   'other': 'gray'
 };
 
-// Marker cluster group for clustering markers
+// Marker cluster group
 const markerClusterGroup = L.markerClusterGroup({
-  maxClusterRadius: 1,  // cluster only markers almost exactly overlapping on screen
+  maxClusterRadius: 1,
   spiderfyDistanceMultiplier: 1
 });
 map.addLayer(markerClusterGroup);
 
 let allData = [];
-let currentYear = '2026'; // track current year
+let currentYear = '2026';
 
-// Load Oshawa boundary GeoJSON and add to map
+// Load Oshawa boundary
 fetch('oshawa_boundary.geojson')
   .then(res => res.json())
   .then(data => {
@@ -45,20 +45,30 @@ fetch('oshawa_boundary.geojson')
   });
 
 /* ===========================
-   NEW: Data last updated text
+   Data last updated text
    =========================== */
-function updateDataUpdated() {
+function updateDataUpdatedFromCsv(results) {
   const div = document.getElementById('data-updated');
   if (!div) return;
 
-  const now = new Date();
-  const formatted = now.toLocaleDateString(undefined, {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric'
-  });
+  // Case 1: CSV has at least one row
+  if (results.data && results.data.length > 0) {
+    const rawDate = results.data[0].data_updated;
+    if (rawDate) {
+      const parsed = new Date(rawDate);
+      const formatted = parsed.toLocaleDateString(undefined, {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
+      div.textContent = `Data last updated: ${formatted}`;
+      return;
+    }
+  }
 
-  div.textContent = 'Data last updated: ' + formatted;
+  // Case 2: CSV exists but has no claim rows (early 2026 case)
+  // We still expect data_updated to exist in the file header
+  div.textContent = 'Data last updated: (no claims yet)';
 }
 
 
@@ -68,9 +78,8 @@ function updateDataUpdated() {
 function loadYearData(year) {
   currentYear = year;
 
-  const csvPath = `claims_${year}.csv`; // if stored in /data/, use: `data/claims_${year}.csv`
+  const csvPath = `claims_${year}.csv`; // change to data/claims_${year}.csv if needed
 
-  // Clear old markers + count immediately so user sees it changed
   markerClusterGroup.clearLayers();
   updateClaimCount(0);
 
@@ -79,23 +88,20 @@ function loadYearData(year) {
     download: true,
     skipEmptyLines: true,
     complete: (results) => {
-      allData = results.data.filter(row => row.latitude && row.longitude);
+      allData = results.data.filter(r => r.latitude && r.longitude);
 
-      // ✅ Update the “last updated” text whenever the CSV loads successfully
-      updateDataUpdated();
+      updateDataUpdatedFromCsv(results);   // ✅ read from CSV
 
-      // Reuse your existing filter logic
       applyFilters();
     },
     error: (err) => {
-      console.error(`Failed to load ${csvPath}`, err);
-      alert(`Could not load ${csvPath}. Check the file path/name in the repo.`);
+      console.error('CSV failed to load:', csvPath, err);
     }
   });
 }
 
 /* ===========================
-   Update map markers based on filtered data
+   Update map markers
    =========================== */
 function updateMap(data) {
   markerClusterGroup.clearLayers();
@@ -117,21 +123,21 @@ function updateMap(data) {
           border-radius:50%;
           width:16px;
           height:16px;
-          opacity: 0.85;
+          opacity:0.85;
         "></div>`,
         iconSize: [16, 16],
         iconAnchor: [8, 8]
       })
     }).bindPopup(`
-      <div style="font-size: 13px; font-family: sans-serif;">
-        <div style="background: #eee; padding: 6px; font-weight: bold; border-bottom: 1px solid #ccc;">
+      <div style="font-size:13px;font-family:sans-serif;">
+        <div style="background:#eee;padding:6px;font-weight:bold;border-bottom:1px solid #ccc;">
           Claim Details
         </div>
-        <div style="padding: 6px;">
+        <div style="padding:6px;">
           <strong>Type:</strong> ${row.type || 'N/A'}<br>
           <strong>Date:</strong> ${row.date || 'N/A'}<br>
           <strong>Location:</strong><br>
-          ${(row.location_desc || 'N/A')}
+          ${row.location_desc || 'N/A'}
         </div>
       </div>
     `);
@@ -143,7 +149,7 @@ function updateMap(data) {
 }
 
 /* ===========================
-   Apply filters from inputs and update map
+   Apply filters
    =========================== */
 function applyFilters() {
   const startDateVal = document.getElementById('start-date').value;
@@ -165,7 +171,7 @@ function applyFilters() {
     const typeMatch =
       selectedType === '' ||
       (selectedType === 'other' && isOther) ||
-      (selectedType === rowType);
+      selectedType === rowType;
 
     const startOk = !startDate || rowDate >= startDate;
     const endOk = !endDate || rowDate <= endDate;
@@ -179,38 +185,35 @@ function applyFilters() {
 /* ===========================
    Events
    =========================== */
-
-// Filter button event
 document.getElementById('filter-button').addEventListener('click', applyFilters);
 
-// Year dropdown change
 document.getElementById('year-select').addEventListener('change', (e) => {
-  // Wipe filters when switching years to avoid "empty" confusion
   document.getElementById('start-date').value = '';
   document.getElementById('end-date').value = '';
   document.getElementById('type-select').value = '';
-
   loadYearData(e.target.value);
 });
 
 function updateClaimCount(count) {
-  const countDiv = document.getElementById('claim-count');
-  countDiv.textContent = `Total Claims Shown: ${count}`;
+  document.getElementById('claim-count').textContent =
+    `Total Claims Shown: ${count}`;
 }
 
-// Add legend control
+/* ===========================
+   Legend
+   =========================== */
 const legend = L.control({ position: 'bottomright' });
 
 legend.onAdd = function () {
   const div = L.DomUtil.create('div', 'info legend');
-  const types = Object.keys(typeColors);
-
   div.innerHTML = '<strong>Claim Types</strong><br>';
-  types.forEach(type => {
-    const color = typeColors[type];
-    const label = type.replace(/\b\w/g, l => l.toUpperCase());
+
+  Object.keys(typeColors).forEach(type => {
     div.innerHTML +=
-      `<i style="background:${color}; width:12px; height:12px; display:inline-block; margin-right:6px; border:1px solid #000;"></i>${label}<br>`;
+      `<i style="background:${typeColors[type]};
+      width:12px;height:12px;display:inline-block;
+      margin-right:6px;border:1px solid #000;"></i>
+      ${type.replace(/\b\w/g, l => l.toUpperCase())}<br>`;
   });
 
   return div;
@@ -218,7 +221,9 @@ legend.onAdd = function () {
 
 legend.addTo(map);
 
-// Initial load (default to whatever your dropdown is set to)
+/* ===========================
+   Initial load
+   =========================== */
 document.addEventListener('DOMContentLoaded', () => {
   const yearSelect = document.getElementById('year-select');
   loadYearData(yearSelect ? yearSelect.value : '2026');
