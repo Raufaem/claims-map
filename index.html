@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Claims Map</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+
+  <!-- Leaflet.markercluster CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.Default.css" />
+  <link rel="stylesheet" href="style.css" />
+ 
+
+</head>
+<body>
+
+  <div class="filters">
+    <label for="year-select">Year:</label>
+    <select id="year-select">
+      <option value="2026" selected>2026</option>
+      <option value="2025">2025</option>
+    </select>
+    &nbsp;
+    <label for="start-date">Start Date:</label>
+    <input type="date" id="start-date">
+    &nbsp;
+    <label for="end-date">End Date:</label>
+    <input type="date" id="end-date">
+    &nbsp;
+    <label for="type-select">Type:</label>
+    <select id="type-select">
+      <option value="">All</option>
+      <option value="Pothole">Pothole</option>
+      <option value="Property Damage">Property Damage</option>
+      <option value="Slip and Fall">Slip and Fall</option>
+      <option value="Trip and Fall">Trip and Fall</option>
+      <option value="Other">Other</option>
+    </select>
+    &nbsp;
+    <button id="filter-button">Apply Filters</button>
+  </div>
+
+  <!-- CLAIM COUNT - moved up here so JS can find it early -->
+  <div id="claim-count" style="font-family: sans-serif; margin: 10px; font-weight: bold;">
+    Total Claims Shown: 0
+  </div>
+
+  <!-- MAP -->
+  <div id="map"></div>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+  <!-- Leaflet.markercluster JS -->
+  <script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
+
+  <!-- PapaParse -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+
+  <!-- Your custom script -->
+  <script src="script.js"></script>
+
+</body>
+</html>
