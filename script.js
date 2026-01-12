@@ -48,6 +48,9 @@ fetch('oshawa_boundary.geojson')
    NEW: Data last updated text
    =========================== */
 function updateDataUpdated() {
+  const div = document.getElementById('data-updated');
+  if (!div) return;
+
   const now = new Date();
   const formatted = now.toLocaleDateString(undefined, {
     year: 'numeric',
@@ -55,11 +58,9 @@ function updateDataUpdated() {
     day: 'numeric'
   });
 
-  const div = document.getElementById('data-updated');
-  if (div) {
-    div.textContent = `Data last updated: ${formatted}`;
-  }
+  div.textContent = 'Data last updated: ' + formatted;
 }
+
 
 /* ===========================
    Load data by year
