@@ -50,7 +50,7 @@ fetch('oshawa_boundary.geojson')
 function loadYearData(year) {
   currentYear = year;
 
-  const csvPath = `claims_${year}.csv`; // <-- if stored in /data/, use: `data/claims_${year}.csv`
+  const csvPath = `claims_${year}.csv?v=${Date.now()}`;
 
   // Optional: clear old markers + count immediately so user sees it changed
   markerClusterGroup.clearLayers();
