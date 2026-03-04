@@ -1,11 +1,27 @@
 // Initialize map centered on Oshawa
 const map = L.map('map').setView([43.9, -78.86], 12);
 
-// Add OpenStreetMap tiles
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+// OpenStreetMap base layer
+const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '&copy; OpenStreetMap contributors'
-}).addTo(map);
+});
 
+// Satellite imagery layer (Esri)
+const esriSat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/' +
+  'World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+  attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, etc.'
+});
+
+// Add OSM as default base layer
+osm.addTo(map);
+
+// Base maps toggle (top right)
+const baseMaps = {
+  "Street Map": osm,
+  "Satellite": esriSat
+};
+
+L.control.layers(baseMaps, null, { position: 'topright' }).addTo(map);
 // Claim type colors
 const typeColors = {
   'pothole': 'red',
